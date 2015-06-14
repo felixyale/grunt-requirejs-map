@@ -25,11 +25,11 @@ In your project's Gruntfile, add a section named `requirejs_map` to the data obj
 ```js
 grunt.initConfig({
   requirejs_map: {
-    options: {
-      // Task-specific options go here.
-    },
     your_target: {
-      // Target-specific file lists and/or options go here.
+      options: {
+        // Task-specific options go here.
+      },
+      // Target-specific file lists go here.
     },
   },
 });
@@ -37,49 +37,96 @@ grunt.initConfig({
 
 ### Options
 
-#### options.separator
+#### options.assetsDir
 Type: `String`
-Default value: `',  '`
+Default value: `''`
 
-A string value that is used to do something with whatever.
+Assets direction.
 
-#### options.punctuation
+#### options.assetsMapFile
 Type: `String`
-Default value: `'.'`
+Default value: `'assets.json'`
 
-A string value that is used to do something else with whatever else.
+Assets md5 map, must be json format.
+
+#### options.mainConfigFile
+Type: `String`
+Default value: `'require-config.json'`
+
+Config of Requirejs, must be json format.
+
+#### options.dest
+Type: `String`
+Default value: `'./tmp/require-map.json'`
+
+Destination file path.
 
 ### Usage Examples
 
 #### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
 
 ```js
 grunt.initConfig({
   requirejs_map: {
     options: {},
     files: {
-      'dest/default_options': ['src/testing', 'src/123'],
+      'tmp/default_options': ['./**/*.js'],
     },
   },
 });
 ```
 
-[Get a example](https://github.com/felixyale/nobody)
+##### Output json file
+
+You will get a json file like this:
+```json
+{
+  "paths": {
+    "foo": "assets/basic/js/foo.cb6ebd07.js",
+    "bar": "assets/basic/js/bar.e52a2c07.js",
+    "assets/basic/core.css": "assets/basic/core.a0c2ce43.css",
+    "assets/basic/core": "assets/basic/core.24587c5c.js",
+    "assets/js/main": "assets/js/main.9cfca1e8.js"
+  },
+  "shim": {
+    "foo": {
+      "deps": [
+      "jquery",
+        "bar"
+      ],
+      "exports": "foo"
+    },
+    "bar": {
+      "deps": [
+        "jquery"
+      ]
+    },
+    "assets/js/main": {
+      "deps": [
+        "foo"
+      ]
+    }
+  }
+}
+```
 
 #### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
 
 ```js
 grunt.initConfig({
+  assetsDir: 'test/fixtures/',
   requirejs_map: {
-    options: {
-      separator: ': ',
-      punctuation: ' !!!',
-    },
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
+    custom_options: {
+      options: {
+        assetsDir: '<%= assetsDir %>',
+        assetsMapFile: '<%= assetsDir %>assets.json',
+        mainConfigFile: '<%= assetsDir %>require-config.json',
+        dest: 'tmp/custom.json'
+      },
+      files: {
+        'tmp/custom_options': ['<%= assetsDir %>**/*.js']
+      }
+    }
   },
 });
 ```

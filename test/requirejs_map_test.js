@@ -30,7 +30,7 @@ exports.requirejs_map = {
   default_options: function(test) {
     test.expect(1);
 
-    var actual = grunt.file.read('tmp/default_options');
+    var actual = grunt.file.read('tmp/require-map.json');
     var expected = grunt.file.read('test/expected/default_options');
     test.equal(actual, expected, 'should describe what the default behavior is.');
 
@@ -39,7 +39,7 @@ exports.requirejs_map = {
   custom_options: function(test) {
     test.expect(1);
 
-    var actual = grunt.file.read('tmp/custom_options');
+    var actual = grunt.file.read('tmp/custom.json');
     var expected = grunt.file.read('test/expected/custom_options');
     test.equal(actual, expected, 'should describe what the custom option(s) behavior is.');
 

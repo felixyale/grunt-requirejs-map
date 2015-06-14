@@ -1,6 +1,6 @@
 /*
 * grunt-requirejs-map
-* https://github.com/felix/grunt-requirejs-map
+* https://github.com/felixyale/grunt-requirejs-map
 *
 * Copyright (c) 2015 felixyale
 * Licensed under the MIT license.
@@ -24,94 +24,106 @@ module.exports = function(grunt) {
   var requirePattern 
   = new RegExp('(require\\s*\\(\\s*\\[\\s*(' + dependencyPathPattern.source + '\\s*,?\\s*)*\\]\\s*)|(require\\s*\\(\\s*(' + dependencyPathPattern.source + '\\s*,?\\s*)*)', 'ig');
 
-  var dependenciesPattern 
-  = new RegExp('(dependencies\\s*(:|=)\\s*\\[\\s*(' + dependencyPathPattern.source + '\\s*,?\\s*)*\\]\\s*)|(dependencies\\s*\\.\\s*push\\(\\s*(' + dependencyPathPattern.source + '\\s*,?\\s*)*)', 'ig');
-  
-  var isJs = new RegExp('.js$', 'i');
+  var jsPattern = new RegExp('\\.js$', 'i');
 
-  grunt.registerMultiTask('requirejs_map', 'Create a map of dependency of rjs files.', function() {
+  var suffixPattern = new RegExp('\\.[0-9a-z]+$', 'i');
+
+  grunt.registerMultiTask('requirejs_map', 'Create a map of dependencies of js files.', function() {
     // Merge task-specific and/or target-specific options with these defaults.
     var options = this.options({
-      punctuation: '.',
-      separator: ', ',
-      dest: ''
+      assetsDir: '',
+      assetsMapFile: 'assets.json',
+      mainConfigFile: 'require-config.json',
+      dest: './tmp/require-map.json'
     });
 
-    if (!options.mainConfigFile) {
-      grunt.log.error('options.mainConfigFile must be specifiled.');
-      return false;
-    }
-    
-    if (!grunt.file.exists(options.mainConfigFile)) {
-      grunt.log.warn('MainConfigFile file "' + options.mainConfigFile + '" not found.');
+    var requireConfig = {};
+
+    if (!options.mainConfigFile || !grunt.file.exists(options.mainConfigFile)) {
+      grunt.log.error('options.mainConfigFile not be specifiled or mainConfigFile file not found.');
       return false;
     } else {
-      var rconfig = grunt.file.readJSON(options.mainConfigFile);
+      requireConfig = grunt.file.readJSON(options.mainConfigFile);
     }
 
-    var dir = options.dest.replace(/^\.*\/*|\/$/g, '') + '/';
-    
-    var _assetsMap = grunt.file.readJSON(options.assetsMapFile);
-    var assetsMap = {};
-    
-    var pathMap = rconfig.paths;
-    var shimMap = rconfig.shim;
-    var _pathMap = {};
-    var __pathMap = {};
+    // e.g. {"foo": "assets/basic/js/foo"}
+    var requirePathMap = requireConfig.paths;
+
+    // e.g. {"foo": {"deps": ["jquery"], "exports": "foo"}}
+    var requireShimMap = requireConfig.shim;
+
+    // e.g. {"assets/basic/js/foo": "foo"}
+    var requireAntiPathMap = {};
+
+    // assets dir , e.g. test/fixtures/
+    var dir = options.assetsDir.replace(/^\.*\/*|\/$/g, '') + '/';
+
+    // e.g. {"assets/basic/js/bar.js": "assets/basic/js/bar.e52a2c07.js"}
+    var assetsMap = grunt.file.readJSON(options.assetsMapFile);
 
     (function() {
-      for (var i in pathMap) {
-        _pathMap[pathMap[i]] = i;
+      for (var i in requirePathMap) {
+        requireAntiPathMap[requirePathMap[i]] = i;
       }
-    })();
 
-    (function() {
-      for (var i in _assetsMap) {
-        if (isJs.test(i)) {
-          var key = i.substr(0, i.length-3);
-          if (key && (key in _pathMap)) {
-            pathMap[_pathMap[key]] = assetsMap[_pathMap[key]] = _assetsMap[i];
-            __pathMap[_assetsMap[i]] = _pathMap[key];
+      // e.g. {"assets/basic/js/foo.cb6ebd07.js": "foo"}
+      var _requireAntiPathMap = {};
+
+      for (var j in assetsMap) {
+        if (jsPattern.test(assetsMap[j])) {
+          var key = j.replace(suffixPattern, '');
+          if (key && (key in requireAntiPathMap)) {
+            requirePathMap[requireAntiPathMap[key]] = assetsMap[j];
+            _requireAntiPathMap[assetsMap[j]] = requireAntiPathMap[key];
           } else {
-            pathMap[key] = _assetsMap[i];
-            __pathMap[_assetsMap[i]] = key;
+            requirePathMap[key] = assetsMap[j];
+            _requireAntiPathMap[assetsMap[j]] = key;
           }
         } else {
+
           // css and image path
-          pathMap[i] = _assetsMap[i];
+          requirePathMap[j] = assetsMap[j];
+        }
+      }
+
+      requireAntiPathMap = _requireAntiPathMap;
+      
+      for (var n in requireShimMap) {
+        if (requireShimMap[n] instanceof Array) {
+          requireShimMap[n] = {
+            deps: requireShimMap[n]
+          };
+        } else if (!requireShimMap[n]['deps']) {
+          requireShimMap[n]['deps'] = [];
         }
       }
     })();
 
-    _pathMap = __pathMap;
-
     // add dependencies to shim
     function shim(filepath, des) {
-      var _path = filepath = filepath.substr(dir.length, filepath.length-3);
-      var path = _pathMap[_path];
+      filepath = filepath.substr(dir.length);
+
+      if (!(filepath in requireAntiPathMap)) {
+        return false;
+      }
+
+      // e.g. assets/basic/js/foo.cb6ebd07
+      var filepathNoSuffix = filepath.substr(0, filepath.length-3);
+      var path = requireAntiPathMap[filepath];
 
       des.forEach(function(desPath) {
         desPath = desPath.substr(1, desPath.length-2);
-        if (path != desPath) {
-          if (!shimMap[path]) {
-            shimMap[path] = {
+        if (path !== desPath) {
+          if (!requireShimMap[path]) {
+            requireShimMap[path] = {
               deps: [desPath]
             };
           } else {
-            if (shimMap[path] instanceof Array) {
-              shimMap[path] = {
-                deps: shimMap[path]
-              };
-            } else if (!shimMap[path]['deps'] ) {
-              shimMap[path]['deps'] = [];
+            if (requireShimMap[path]['deps'].indexOf(desPath) === -1) {
+              requireShimMap[path]['deps'].push(desPath);
             }
-
-            if (shimMap[path]['deps'].indexOf(desPath) == -1) {
-              shimMap[path]['deps'].push(desPath);
-            }
-
           }
-          
+
         }
       });
     }
@@ -123,15 +135,15 @@ module.exports = function(grunt) {
       var src = f.src.filter(function(filepath) {
         // Warn on and remove invalid source files (if nonull was set).
         if (!grunt.file.exists(filepath)) {
-          grunt.log.warn('Source file "' + filepath + '" not found.');
+          grunt.log.error('Source file "' + filepath + '" not found.');
           return false;
         } else {
           // grunt.log.writeln(filepath);
           return true;
         }
       }).map(function(filepath) {
+
         // Read file source.
-        
         var contents = grunt.file.read(filepath);
 
         // dependency path array
@@ -139,7 +151,6 @@ module.exports = function(grunt) {
 
         var defineMatchs = contents.match(definePattern);
         var requireMatchs = contents.match(requirePattern);
-        var dependenciesMatchs = contents.match(dependenciesPattern);
 
         if(defineMatchs) {
           defineMatchs.forEach(function(defineMatch) {
@@ -159,28 +170,20 @@ module.exports = function(grunt) {
             }
           });
         }
-      
-        if(dependenciesMatchs) {
-          dependenciesMatchs.forEach(function(dependenciesMatch) {
-            var pathMatchs = dependenciesMatch.match(dependencyPathPattern);
-            if(pathMatchs) {
-              dependencies = dependencies.concat(pathMatchs);
-            }
-          });
-        }
 
         shim(filepath, dependencies);
 
-        return contents;
-      }).join(grunt.util.normalizelf(options.separator));
+      });
+
+      // grunt.log.error('error');
+      // Write the destination file.
+      grunt.file.write(options.dest, JSON.stringify(requireConfig, null, 2));
+
+      // Print a success message.
+      grunt.log.writeln('File "' + options.dest + '" created.');
 
     });
 
-    // Write the destination file.
-    grunt.file.write(options.dest + '/require-map.json', JSON.stringify(rconfig));
-
-    // Print a success message.
-    grunt.log.writeln('File "' + options.dest + '/require-map.json' + '" created.');
   });
 
 };

@@ -28,22 +28,29 @@ module.exports = function(grunt) {
       tests: ['tmp']
     },
 
+    assetsDir: 'test/fixtures/',
+
     // Configuration to be run (and then tested).
     requirejs_map: {
       default_options: {
         options: {
+          assetsDir: '<%= assetsDir %>',
+          assetsMapFile: '<%= assetsDir %>assets.json',
+          mainConfigFile: '<%= assetsDir %>require-config.json'
         },
         files: {
-          'tmp/default_options': ['test/fixtures/testing', 'test/fixtures/123']
+          'tmp/default_options': ['<%= assetsDir %>**/*.js']
         }
       },
       custom_options: {
         options: {
-          separator: ': ',
-          punctuation: ' !!!'
+          assetsDir: '<%= assetsDir %>',
+          assetsMapFile: '<%= assetsDir %>assets.json',
+          mainConfigFile: '<%= assetsDir %>require-config.json',
+          dest: 'tmp/custom.json'
         },
         files: {
-          'tmp/custom_options': ['test/fixtures/testing', 'test/fixtures/123']
+          'tmp/custom_options': ['<%= assetsDir %>**/*.js']
         }
       }
     },
