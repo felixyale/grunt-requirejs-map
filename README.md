@@ -1,6 +1,6 @@
 # grunt-requirejs-map
 
-> Generate dependencies of js files.
+> Generate dependencies of required file for requirejs.
 
 ## Getting Started
 This plugin requires Grunt `~0.4.5`

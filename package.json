@@ -1,6 +1,6 @@
 {
   "name": "grunt-requirejs-map",
-  "description": "Generate dependencies of js files.",
+  "description": "Generate dependencies of required file for requirejs.",
   "version": "1.0.0",
   "homepage": "https://github.com/felixyale/grunt-requirejs-map",
   "author": {
