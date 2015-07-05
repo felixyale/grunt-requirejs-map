@@ -2,7 +2,10 @@
   "paths": {
     "foo": "assets/basic/js/foo",
     "bar": "assets/basic/js/bar",
-    "wx": "http://res.wx.qq.com/open/js/jweixin-1.0.0.js"
+    "wx": "http://res.wx.qq.com/open/js/jweixin-1.0.0",
+    "jquery": "assets/basic/jquery",
+    "core": "assets/basic/core",
+    "main": "assets/js/main"
   },
   "shim": {
     "foo": {

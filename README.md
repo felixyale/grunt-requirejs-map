@@ -1,6 +1,6 @@
 # grunt-requirejs-map
 
-> Create a map of dependencies of js files.
+> Generate dependencies of js files.
 
 ## Getting Started
 This plugin requires Grunt `~0.4.5`
@@ -43,21 +43,34 @@ Default value: `''`
 
 Assets direction.
 
-#### options.assetsMapFile
-Type: `String`
-Default value: `'assets.json'`
-
-Assets md5 map, must be json format.
-
 #### options.mainConfigFile
 Type: `String`
 Default value: `'require-config.json'`
 
 Config of Requirejs, must be json format.
+```json
+{
+  "paths": {
+    "foo": "assets/basic/js/foo",
+    "bar": "assets/basic/js/bar",
+    "wx": "http://res.wx.qq.com/open/js/jweixin-1.0.0",
+    "jquery": "assets/basic/jquery",
+    "core": "assets/basic/core",
+    "main": "assets/js/main"
+  },
+  "shim": {
+    "foo": {
+      "deps": ["jquery"],
+      "exports": "foo"
+    },
+    "bar": ["jquery"]
+  }
+}
+```
 
 #### options.dest
 Type: `String`
-Default value: `'./tmp/require-map.json'`
+Default value: `'./tmp/require-config.json'`
 
 Destination file path.
 
@@ -68,10 +81,7 @@ Destination file path.
 ```js
 grunt.initConfig({
   requirejs_map: {
-    options: {},
-    files: {
-      'tmp/default_options': ['./**/*.js'],
-    },
+    options: {}
   },
 });
 ```
@@ -82,16 +92,17 @@ You will get a json file like this:
 ```json
 {
   "paths": {
-    "foo": "assets/basic/js/foo.cb6ebd07.js",
-    "bar": "assets/basic/js/bar.e52a2c07.js",
-    "assets/basic/core.css": "assets/basic/core.a0c2ce43.css",
-    "assets/basic/core": "assets/basic/core.24587c5c.js",
-    "assets/js/main": "assets/js/main.9cfca1e8.js"
+    "foo": "assets/basic/js/foo",
+    "bar": "assets/basic/js/bar",
+    "wx": "http://res.wx.qq.com/open/js/jweixin-1.0.0",
+    "jquery": "assets/basic/jquery",
+    "core": "assets/basic/core",
+    "main": "assets/js/main"
   },
   "shim": {
     "foo": {
       "deps": [
-      "jquery",
+        "jquery",
         "bar"
       ],
       "exports": "foo"
@@ -101,7 +112,7 @@ You will get a json file like this:
         "jquery"
       ]
     },
-    "assets/js/main": {
+    "main": {
       "deps": [
         "foo"
       ]
@@ -119,12 +130,8 @@ grunt.initConfig({
     custom_options: {
       options: {
         assetsDir: '<%= assetsDir %>',
-        assetsMapFile: '<%= assetsDir %>assets.json',
-        mainConfigFile: '<%= assetsDir %>require-config.json',
+        mainConfigFile: 'require-config.json',
         dest: 'tmp/custom.json'
-      },
-      files: {
-        'tmp/custom_options': ['<%= assetsDir %>**/*.js']
       }
     }
   },
@@ -135,4 +142,4 @@ grunt.initConfig({
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
-_(Nothing yet)_
+version 1.0.0

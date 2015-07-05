@@ -23,6 +23,14 @@ module.exports = function(grunt) {
       }
     },
 
+    jscs: {
+      gruntfile: ['Gruntfile.js'],
+      js: ['tasks/requirejs_map.js'],
+      options: {
+        config: '.jscsrc'
+      }
+    },
+
     // Before generating any new files, remove any previously-created files.
     clean: {
       tests: ['tmp']
@@ -34,23 +42,15 @@ module.exports = function(grunt) {
     requirejs_map: {
       default_options: {
         options: {
-          assetsDir: '<%= assetsDir %>',
-          assetsMapFile: '<%= assetsDir %>assets.json',
-          mainConfigFile: '<%= assetsDir %>require-config.json'
-        },
-        files: {
-          'tmp/default_options': ['<%= assetsDir %>**/*.js']
+          mainConfigFile: '<%= assetsDir %>require-config.json',
+          assetsDir: '<%= assetsDir %>'
         }
       },
       custom_options: {
         options: {
           assetsDir: '<%= assetsDir %>',
-          assetsMapFile: '<%= assetsDir %>assets.json',
           mainConfigFile: '<%= assetsDir %>require-config.json',
           dest: 'tmp/custom.json'
-        },
-        files: {
-          'tmp/custom_options': ['<%= assetsDir %>**/*.js']
         }
       }
     },
@@ -66,6 +66,7 @@ module.exports = function(grunt) {
   grunt.loadTasks('tasks');
 
   // These plugins provide necessary tasks.
+  grunt.loadNpmTasks('grunt-jscs');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
@@ -75,6 +76,6 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['clean', 'requirejs_map', 'nodeunit']);
 
   // By default, lint and run all tests.
-  grunt.registerTask('default', ['jshint', 'test']);
+  grunt.registerTask('default', ['jshint', 'jscs', 'test']);
 
 };
