@@ -49,7 +49,7 @@ module.exports = function(grunt) {
     var requireShimMap = requireConfig.shim;
 
     // assets dir , e.g. test/fixtures/
-    var dir = options.assetsDir.replace(/^\.*\/*|\/$/g, '') + '/';
+    var dir = options.assetsDir.replace(/^\.*\/*|\/$/g, '');
 
     // [...] to {deps: [...]}
     // {} to {deps: []}
